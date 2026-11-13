@@ -8,17 +8,15 @@ from pathlib import Path
 
 
 def default_db() -> Path:
-    """Reuse a v0.3 Dropbox index if present; otherwise use the new app data directory.
+    """Default database location under the per-user app data directory.
 
-    Set DOCINDEX_DB to force a specific database for worker, tray and MCP.
+    Set LOCAL_DOCS_MCP_DB to force a specific database for worker, tray and MCP.
     """
-    override = os.environ.get("DOCINDEX_DB")
+    override = os.environ.get("LOCAL_DOCS_MCP_DB")
     if override:
         return Path(override).expanduser()
     base = Path(os.environ["LOCALAPPDATA"]) if os.environ.get("LOCALAPPDATA") else Path.home() / ".local" / "share"
-    new = base / "local-docs-mcp" / "index.sqlite"
-    legacy = base / "dropbox-doc-mcp" / "index.sqlite"
-    return new if new.is_file() or not legacy.is_file() else legacy
+    return base / "local-docs-mcp" / "index.sqlite"
 
 
 def connect(db: Path | str, *, readonly: bool = False) -> sqlite3.Connection:

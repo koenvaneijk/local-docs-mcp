@@ -151,8 +151,8 @@ class SearchWindow:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Search local Dropbox document index")
-    parser.add_argument("--db", default=os.environ.get("DOCINDEX_DB", str(default_db())))
+    parser = argparse.ArgumentParser(description="Search the local document index")
+    parser.add_argument("--db", default=os.environ.get("LOCAL_DOCS_MCP_DB", str(default_db())))
     args = parser.parse_args()
     root = tk.Tk()
     SearchWindow(root, Path(args.db).expanduser())

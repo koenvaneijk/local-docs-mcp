@@ -5,16 +5,16 @@ from docx import Document
 from openpyxl import Workbook
 from reportlab.pdfgen import canvas
 
-from docindex.extract import extract
-from docindex.indexer import scan
-from docindex.store import connect, get_document, search, stats
+from local_docs_mcp.extract import extract
+from local_docs_mcp.indexer import scan
+from local_docs_mcp.store import connect, get_document, search, stats
 
 
 @pytest.fixture()
 def tree(tmp_path):
     root = tmp_path / "Dropbox"
     root.mkdir()
-    return root, tmp_path / "docindex.sqlite"
+    return root, tmp_path / "local_docs_mcp.sqlite"
 
 
 def test_index_search_update_delete(tree):

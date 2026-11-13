@@ -9,10 +9,10 @@ import pytest
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 
-from docindex.dropbox import discover_dropbox
-from docindex.extract import tesseract_languages, tesseract_executable
-from docindex.indexer import scan
-from docindex.store import connect, initialize, search, stats
+from local_docs_mcp.dropbox import discover_dropbox
+from local_docs_mcp.extract import tesseract_languages, tesseract_executable
+from local_docs_mcp.indexer import scan
+from local_docs_mcp.store import connect, initialize, search, stats
 
 
 def test_detect_current_user_dropbox(monkeypatch, tmp_path):

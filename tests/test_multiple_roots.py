@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import pytest
 
-from docindex.indexer import scan, register_root, remove_root
-from docindex.opening import document_path
-from docindex.store import connect, initialize, get_roots, search, stats, default_db
+from local_docs_mcp.indexer import scan, register_root, remove_root
+from local_docs_mcp.opening import document_path
+from local_docs_mcp.store import connect, initialize, get_roots, search, stats, default_db
 
 
 def test_multiple_roots_index_and_independent_deletion(tmp_path):
@@ -67,18 +67,16 @@ def test_root_registration_and_removal(tmp_path):
         scan(None, db)
 
 
-def test_legacy_db_reused_and_migrated(tmp_path, monkeypatch):
+def test_default_db_location_and_stable_ids(tmp_path, monkeypatch):
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
-    monkeypatch.delenv("DOCINDEX_DB", raising=False)
+    monkeypatch.delenv("LOCAL_DOCS_MCP_DB", raising=False)
     base = tmp_path / "Dropbox"
     base.mkdir()
     (base / "f.txt").write_text("legacy quinoa", encoding="utf8")
-    legacy = tmp_path / "dropbox-doc-mcp" / "index.sqlite"
-    scan(str(base), legacy)
-    with connect(legacy) as con:
+    assert default_db() == tmp_path / "local-docs-mcp" / "index.sqlite"
+    scan(str(base), default_db())
+    with connect(default_db()) as con:
         id_before = search(con, "quinoa")[0]["id"]
-    assert default_db() == legacy
-    with connect(legacy) as con:
         initialize(con)
         assert search(con, "quinoa")[0]["id"] == id_before
         assert get_roots(con) == [str(base.resolve())]

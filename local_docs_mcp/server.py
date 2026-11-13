@@ -10,7 +10,7 @@ from .store import connect, default_db, get_document, search, stats
 from .opening import open_document as open_indexed_document
 
 mcp = FastMCP("Local Documents Search")
-DB = Path(os.environ.get("DOCINDEX_DB", str(default_db()))).expanduser()
+DB = Path(os.environ.get("LOCAL_DOCS_MCP_DB", str(default_db()))).expanduser()
 
 
 @mcp.tool()

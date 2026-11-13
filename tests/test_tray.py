@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from docindex import tray
-from docindex.indexer import scan
-from docindex.opening import document_path
-from docindex.store import connect, search, stats
+from local_docs_mcp import tray
+from local_docs_mcp.indexer import scan
+from local_docs_mcp.opening import document_path
+from local_docs_mcp.store import connect, search, stats
 
 
 def test_startup_command_quotes_spaces(tmp_path):

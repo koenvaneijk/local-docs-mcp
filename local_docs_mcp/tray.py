@@ -1,6 +1,6 @@
 """Windows notification-area app: background sync + standalone search window.
 
-Run with: .venv\\Scripts\\pythonw.exe -m docindex.tray
+Run with: .venv\\Scripts\\pythonw.exe -m local_docs_mcp.tray
 No UI toolkit is imported in the scan thread; search uses a separate Tk process.
 """
 from __future__ import annotations
@@ -21,7 +21,6 @@ from .store import default_db
 LOG = logging.getLogger(__name__)
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 RUN_VALUE = "Local Documents Search MCP"
-LEGACY_RUN_VALUE = "Dropbox Document Search MCP"
 
 
 def preferred_pythonw(executable: str | Path | None = None) -> Path:
@@ -35,7 +34,7 @@ def preferred_pythonw(executable: str | Path | None = None) -> Path:
 
 
 def launch_command(db: Path, *, interval: int, languages: str, ocr: bool) -> list[str]:
-    cmd = [str(preferred_pythonw()), "-m", "docindex.tray", "--db", str(db),
+    cmd = [str(preferred_pythonw()), "-m", "local_docs_mcp.tray", "--db", str(db),
            "--interval", str(interval), "--ocr-languages", languages]
     if not ocr:
         cmd.append("--no-ocr")
@@ -60,16 +59,12 @@ def is_startup_enabled() -> bool:
 
 
 def set_startup(enabled: bool, command: str) -> None:
-    """HKCU only: never needs administrator access. Retire legacy autostart."""
+    """HKCU only: never needs administrator access."""
     if os.name != "nt":
         raise RuntimeError("Windows autostart is only supported on Windows")
     import winreg
     with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, RUN_KEY, 0,
                             winreg.KEY_READ | winreg.KEY_SET_VALUE) as key:
-        try:
-            winreg.DeleteValue(key, LEGACY_RUN_VALUE)
-        except FileNotFoundError:
-            pass
         if enabled:
             winreg.SetValueEx(key, RUN_VALUE, 0, winreg.REG_SZ, command)
         else:
@@ -167,7 +162,7 @@ def _show_error(title: str, detail: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Windows tray local document indexer and search")
-    parser.add_argument("--db", default=os.environ.get("DOCINDEX_DB", str(default_db())))
+    parser.add_argument("--db", default=os.environ.get("LOCAL_DOCS_MCP_DB", str(default_db())))
     parser.add_argument("--interval", type=int, default=900, help="Seconds between scans; minimum 60")
     parser.add_argument("--ocr-languages", default="nld+eng")
     parser.add_argument("--no-ocr", action="store_true")
@@ -175,7 +170,7 @@ def main() -> None:
     db = Path(args.db).expanduser().resolve()
     log_path = configure_logging(db)
     if os.name != "nt":
-        raise SystemExit("The tray app currently supports Windows only. Use 'docindex.cli watch' elsewhere.")
+        raise SystemExit("The tray app currently supports Windows only. Use 'local_docs_mcp.cli watch' elsewhere.")
 
     try:
         with single_writer(db.with_name("tray.instance")):
@@ -197,7 +192,7 @@ def _run_icon(db: Path, interval: int, languages: str, ocr: bool, log_path: Path
 
     def search_window(_icon=None, _item=None) -> None:
         try:
-            cmd = [str(preferred_pythonw()), "-m", "docindex.search_ui", "--db", str(db)]
+            cmd = [str(preferred_pythonw()), "-m", "local_docs_mcp.search_ui", "--db", str(db)]
             subprocess.Popen(cmd, cwd=str(db.parent), close_fds=True)
         except Exception as exc:
             _show_error("Cannot open search", str(exc))

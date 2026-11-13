@@ -19,14 +19,10 @@ dependencies = [
 tray = ["pystray>=0.19.5,<1", "Pillow>=10,<13"]
 
 [project.scripts]
-local-docs-index = "docindex.cli:main"
-local-docs-search = "docindex.search_ui:main"
-local-docs-tray = "docindex.tray:main"
-# Legacy command aliases retained for upgrades
-dropbox-doc-index = "docindex.cli:main"
-dropbox-doc-search = "docindex.search_ui:main"
-dropbox-doc-tray = "docindex.tray:main"
+local-docs-index = "local_docs_mcp.cli:main"
+local-docs-search = "local_docs_mcp.search_ui:main"
+local-docs-tray = "local_docs_mcp.tray:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["docindex*"]
+include = ["local_docs_mcp*"]

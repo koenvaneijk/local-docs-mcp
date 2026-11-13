@@ -20,21 +20,21 @@ In PowerShell, from the extracted `local-docs-mcp` directory:
 ```powershell
 py -3.13 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[tray]"
-.\.venv\Scripts\python.exe -m docindex.cli doctor
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli doctor
 ```
 
 If you have a local `C:\Users\<username>\Dropbox` folder or Dropbox's `info.json`, the first scan can autodetect it:
 
 ```powershell
-.\.venv\Scripts\python.exe -m docindex.cli index
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli index
 ```
 
 For any other folder (or to add a second indexed folder):
 
 ```powershell
-.\.venv\Scripts\python.exe -m docindex.cli add-root "D:\Documents"
-.\.venv\Scripts\python.exe -m docindex.cli add-root "C:\Users\YourName\Dropbox"
-.\.venv\Scripts\python.exe -m docindex.cli index
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli add-root "D:\Documents"
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli add-root "C:\Users\YourName\Dropbox"
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli index
 ```
 
 **Do not register nested or overlapping roots.** The indexer prevents this. Only register folders you are comfortable exposing to your local AI assistant.
@@ -42,27 +42,27 @@ For any other folder (or to add a second indexed folder):
 Check/search:
 
 ```powershell
-.\.venv\Scripts\python.exe -m docindex.cli roots
-.\.venv\Scripts\python.exe -m docindex.cli status
-.\.venv\Scripts\python.exe -m docindex.cli search '"annual report"'
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli roots
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli status
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli search '"annual report"'
 ```
 
-The index is stored at `%LOCALAPPDATA%\local-docs-mcp\index.sqlite`, unless an existing v0.3 Dropbox index is found at `%LOCALAPPDATA%\dropbox-doc-mcp\index.sqlite` (in which case it **reuses that existing DB**). Override with `DOCINDEX_DB` or `--db` (CLI). Keep the DB private; it contains extracted document text.
+The index is stored at `%LOCALAPPDATA%\local-docs-mcp\index.sqlite`. Override with `LOCAL_DOCS_MCP_DB` or `--db` (CLI). Keep the DB private; it contains extracted document text.
 
 ## Tray app / background sync
 
 ```powershell
-.\.venv\Scripts\pythonw.exe -m docindex.tray
+.\.venv\Scripts\pythonw.exe -m local_docs_mcp.tray
 ```
 
 Use the tray icon → **Search documents…**. Double-click a result to open the original, or choose **Show in Explorer**. Enable **Start with Windows** in its menu if desired. The tray syncs immediately and approximately every 15 minutes *after a scan finishes*. It does not need Goose running. If one configured root is offline, its existing indexed rows are retained while the other roots continue syncing.
 
-If tray launch fails, run `python.exe -m docindex.tray` in a visible terminal to see the error. The log is beside your SQLite DB (`tray.log`). The search UI requires Tkinter (`python -m tkinter`).
+If tray launch fails, run `python.exe -m local_docs_mcp.tray` in a visible terminal to see the error. The log is beside your SQLite DB (`tray.log`). The search UI requires Tkinter (`python -m tkinter`).
 
 **Do not run `watch` concurrently with the tray**. For console-only background sync instead:
 
 ```powershell
-.\.venv\Scripts\python.exe -m docindex.cli watch --interval 900
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli watch --interval 900
 ```
 
 ## Goose Desktop MCP configuration
@@ -71,7 +71,7 @@ Goose → Extensions → Add custom extension → **Standard IO**:
 
 - **Name:** Local Docs Search
 - **Command:** `C:\FULL\PATH\TO\local-docs-mcp\.venv\Scripts\python.exe`
-- **Arguments:** `-m docindex.server`
+- **Arguments:** `-m local_docs_mcp.server`
 
 Tools: `search_documents`, `read_document`, `open_document` (only opens when the user explicitly requests it), `index_status`.
 
@@ -96,21 +96,21 @@ Invoke-WebRequest 'https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.t
 
 PDF pages with little selectable text are rendered and OCR'd locally. If Tesseract is somewhere else, set `TESSERACT_CMD` to its `.exe` path. Disable OCR with `index --no-ocr`, or set other languages with `--ocr-languages nld+eng+fra`. Changing OCR configuration re-extracts existing PDFs once; other unchanged documents are skipped. Embedded pictures inside DOCX/XLSX and older `.doc` / `.xls` files aren't OCR'd.
 
-## Upgrading from `dropbox-doc-mcp` v0.3
+## Upgrading from an older build
 
-1. **Exit the old Dropbox tray and stop any `docindex.cli watch` process.** This is important: the old indexer does not understand multiple roots and can delete rows added under v0.4. If you enabled the old **Start with Windows**, disable it in the old tray first; the new tray also clears the old Windows startup registry value when you toggle its startup setting.
-2. Back up `%LOCALAPPDATA%\dropbox-doc-mcp\index.sqlite` (with processes stopped).
-3. Extract `local-docs-mcp` and create/use a venv, then `pip install -e ".[tray]"` from this new directory. If reusing the old `.venv`, uninstall the previous distribution (`pip uninstall dropbox-doc-mcp`) before installing the renamed one.
-4. Run `python -m docindex.cli index`. This migrates the existing database **in place** without reindexing unchanged files; document IDs and FTS data are preserved. The default DB path automatically finds the old index if present.
-5. Restart the tray. Your existing Goose extension can continue using `-m docindex.server` provided its Python environment points to the upgraded package. No change to the Outlook MCP is needed.
+1. **Exit the old tray and stop any `watch` process.** The older indexer does not understand multiple roots and can delete rows added under v0.4. If you enabled the old **Start with Windows**, disable it in the old tray first.
+2. With processes stopped, move your old `index.sqlite` into `%LOCALAPPDATA%\local-docs-mcp\`.
+3. Extract `local-docs-mcp` and create/use a venv, then `pip install -e ".[tray]"` from this directory.
+4. Run `python -m local_docs_mcp.cli index`. This migrates the existing database **in place** without reindexing unchanged files; document IDs and FTS data are preserved.
+5. Restart the tray. Your existing Goose extension can continue using `-m local_docs_mcp.server` provided its Python environment points to the upgraded package. No change to the Outlook MCP is needed.
 
 ### Managing folder roots
 
 ```powershell
-.\.venv\Scripts\python.exe -m docindex.cli add-root "E:\SharedFiles"
-.\.venv\Scripts\python.exe -m docindex.cli index
-.\.venv\Scripts\python.exe -m docindex.cli remove-root "E:\SharedFiles"          # retains searchable records
-.\.venv\Scripts\python.exe -m docindex.cli remove-root "E:\SharedFiles" --purge  # delete indexed records too
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli add-root "E:\SharedFiles"
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli index
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli remove-root "E:\SharedFiles"          # retains searchable records
+.\.venv\Scripts\python.exe -m local_docs_mcp.cli remove-root "E:\SharedFiles" --purge  # delete indexed records too
 ```
 
 `remove-root` without `--purge` keeps existing indexed text for recovery, but the opener will refuse those documents because the folder is no longer authorized. To permanently clear those records, re-add the root then remove it with `--purge`.
@@ -132,4 +132,4 @@ Commit source files, `pyproject.toml`, README and tests. Do **not** commit `.ven
 pip install "local-docs-mcp[tray] @ git+https://github.com/koenvaneijk/local-docs-mcp.git"
 ```
 
-The `docindex` Python module and MCP entry point stay unchanged for compatibility.
+The `local_docs_mcp` Python module provides the CLI, tray, search UI and MCP entry points.
