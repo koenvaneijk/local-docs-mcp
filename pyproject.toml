@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "local-docs-mcp"
 version = "0.4.0"
 description = "Local multi-folder document full-text search, OCR, Windows tray, and MCP tools"
+license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
   "mcp>=1.6,<3",
