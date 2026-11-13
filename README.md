@@ -129,7 +129,7 @@ PDF pages with little selectable text are rendered and OCR'd locally. If Tessera
 Commit source files, `pyproject.toml`, README and tests. Do **not** commit `.venv`, any SQLite database or logs. Users can install with:
 
 ```powershell
-pip install "local-docs-mcp[tray] @ git+https://github.com/USERNAME/local-docs-mcp.git"
+pip install "local-docs-mcp[tray] @ git+https://github.com/koenvaneijk/local-docs-mcp.git"
 ```
 
 The `docindex` Python module and MCP entry point stay unchanged for compatibility.
